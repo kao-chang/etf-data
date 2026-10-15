@@ -1,0 +1,89 @@
+{
+  "name": "ETF所有数据汇总",
+  "source_file": "ETF所有数据汇总.xlsx",
+  "generated_at": "2026-10-15T14:03:56",
+  "unit_notes": {
+    "净流入额": "亿元",
+    "规模": "亿元",
+    "收益率/波动率/估值分位": "%",
+    "日均成交额": "元"
+  },
+  "files": {
+    "overview.json": {
+      "table": "收益波动与资金流向概览表",
+      "records_or_series": 24
+    },
+    "flows_broad.json": {
+      "table": "资金流向-宽基累计流入",
+      "records_or_series": 6
+    },
+    "flows_sector.json": {
+      "table": "资金流向-行业＋红利累计流入",
+      "records_or_series": 9
+    },
+    "flows_bond.json": {
+      "table": "资金流向-债基累计流入",
+      "records_or_series": 9
+    },
+    "scale_monthly.json": {
+      "table": "资金流向-基金规模变化",
+      "records_or_series": 6
+    },
+    "detail_all.json": {
+      "table": "明细汇总表",
+      "records_or_series": 1695
+    },
+    "category/科技.json": {
+      "table": "科技",
+      "records_or_series": 364
+    },
+    "category/红利.json": {
+      "table": "红利",
+      "records_or_series": 94
+    },
+    "category/消费.json": {
+      "table": "消费",
+      "records_or_series": 93
+    },
+    "category/医药.json": {
+      "table": "医药",
+      "records_or_series": 108
+    },
+    "category/大制造.json": {
+      "table": "大制造",
+      "records_or_series": 200
+    },
+    "category/QDII.json": {
+      "table": "QDII",
+      "records_or_series": 87
+    },
+    "category/AI.json": {
+      "table": "AI",
+      "records_or_series": 43
+    },
+    "category/机器人.json": {
+      "table": "机器人",
+      "records_or_series": 17
+    },
+    "category/新能源.json": {
+      "table": "新能源",
+      "records_or_series": 103
+    },
+    "category/稳定币.json": {
+      "table": "稳定币",
+      "records_or_series": 15
+    },
+    "category/卫星商业航天.json": {
+      "table": "卫星商业航天",
+      "records_or_series": 8
+    },
+    "category/商品.json": {
+      "table": "商品",
+      "records_or_series": 17
+    },
+    "category/港股.json": {
+      "table": "港股",
+      "records_or_series": 218
+    }
+  }
+}
