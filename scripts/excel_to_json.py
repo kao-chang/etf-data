@@ -100,6 +100,7 @@ def main():
     xlsx = Path(sys.argv[1])
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else OUT_DEFAULT
     (out / "category").mkdir(parents=True, exist_ok=True)
+    (out / "detail").mkdir(parents=True, exist_ok=True)
 
     wb = openpyxl.load_workbook(xlsx, read_only=True, data_only=True)
     manifest = {
@@ -112,6 +113,7 @@ def main():
         },
         "files": {},
     }
+    detail_data = None
 
     for ws in wb.worksheets:
         rows = sheet_rows(ws)
@@ -136,6 +138,22 @@ def main():
         n = data.get("count", len(data.get("series", {})))
         manifest["files"][fname] = {"table": title, "records_or_series": n}
         print(f"{title} -> {fname}  ({n})")
+        if title == DETAIL_SHEET:
+            detail_data = data
+
+    # 明细汇总表按「看板一级分类」拆成小文件，取用方可只下载某一类
+    if detail_data:
+        groups = {}
+        for r in detail_data["records"]:
+            groups.setdefault(str(r.get("看板一级分类") or "未分类"), []).append(r)
+        for gname, grecs in sorted(groups.items()):
+            gdata = {"table": f"明细汇总-{gname}", "fields": detail_data["fields"],
+                     "count": len(grecs), "records": grecs}
+            fname = f"detail/{gname}.json"
+            (out / fname).write_text(
+                json.dumps(gdata, ensure_ascii=False, indent=None), encoding="utf-8")
+            manifest["files"][fname] = {"table": f"明细汇总-{gname}", "records_or_series": len(grecs)}
+            print(f"  拆分: {fname}  ({len(grecs)})")
 
     (out / "index.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")

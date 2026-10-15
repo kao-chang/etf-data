@@ -1,7 +1,7 @@
 {
   "name": "ETF所有数据汇总",
   "source_file": "ETF所有数据汇总.xlsx",
-  "generated_at": "2026-10-15T14:03:56",
+  "generated_at": "2026-10-15T15:19:57",
   "unit_notes": {
     "净流入额": "亿元",
     "规模": "亿元",
@@ -84,6 +84,30 @@
     "category/港股.json": {
       "table": "港股",
       "records_or_series": 218
+    },
+    "detail/QDII.json": {
+      "table": "明细汇总-QDII",
+      "records_or_series": 87
+    },
+    "detail/债券.json": {
+      "table": "明细汇总-债券",
+      "records_or_series": 53
+    },
+    "detail/商品.json": {
+      "table": "明细汇总-商品",
+      "records_or_series": 17
+    },
+    "detail/宽基.json": {
+      "table": "明细汇总-宽基",
+      "records_or_series": 426
+    },
+    "detail/策略.json": {
+      "table": "明细汇总-策略",
+      "records_or_series": 241
+    },
+    "detail/行业.json": {
+      "table": "明细汇总-行业",
+      "records_or_series": 871
     }
   }
 }

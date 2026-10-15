@@ -11,7 +11,8 @@ etf-data-service/
 ├── data/                      # 生成的数据文件（push 到 GitHub 的就是这个目录）
 │   ├── index.json             # 数据包清单与口径说明
 │   ├── overview.json          # 收益波动与资金流向概览（24 条分类）
-│   ├── detail_all.json        # 1695 只 ETF 明细画像（88 字段）
+│   ├── detail_all.json        # 1695 只 ETF 明细画像（88 字段，5.2MB）
+│   ├── detail/*.json          # 明细按看板一级分类拆分：行业/宽基/策略/QDII/债券/商品（按需取用更快）
 │   ├── flows_*.json           # 资金流向日频累计净流入（长表格式）
 │   ├── scale_monthly.json     # 基金规模月度变化（2020 至今）
 │   └── category/*.json        # 13 个行业/主题分类名单
@@ -75,9 +76,10 @@ python mcp_server.py
 }
 ```
 
-提供的工具：`list_datasets`、`get_overview`、`get_etf_detail(code)`、
-`screen_etfs(field, op, value)`、`get_category(name)`、
+提供的工具：`list_datasets`、`get_overview`、`get_etf_detail(code, group)`、
+`screen_etfs(field, op, value, limit, group)`、`get_category(name)`、
 `get_fund_flows(group)`、`get_flow_series(group, series, last_n)`。
+其中 `group` 可选：行业/宽基/策略/QDII/债券/商品，指定后只下载对应分类文件。
 
 > 注意：`mcp_server.py` 里的 DEFAULT_BASE 占位符要换成你自己的仓库地址。
 

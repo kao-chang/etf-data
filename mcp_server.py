@@ -54,28 +54,56 @@ def get_overview() -> dict:
     return _load("overview.json")
 
 
+DETAIL_GROUPS = ["行业", "宽基", "策略", "QDII", "债券", "商品"]
+
+
+def _quote(name: str) -> str:
+    import urllib.parse
+    return urllib.parse.quote(name)
+
+
+def _detail_records(group: str | None = None) -> list:
+    """取明细记录：指定 group 时只拉该分类文件（小），否则拉全量 detail_all。"""
+    if group:
+        if group not in DETAIL_GROUPS:
+            return []
+        return _load(f"detail/{_quote(group)}.json")["records"]
+    return _load("detail_all.json")["records"]
+
+
 @mcp.tool
-def get_etf_detail(code: str) -> dict:
+def get_etf_detail(code: str, group: str = "") -> dict:
     """按代码查询单只 ETF 的完整画像（88 个字段：基本信息、标签、成分结构、业绩、基本面、市场、产品）。
 
-    参数 code 形如 "510050.SH"。找不到时返回相近代码列表。
+    参数 code 形如 "510050.SH"。可选 group（行业/宽基/策略/QDII/债券/商品）
+    用于只下载对应分类文件，更快；不传则查全量。找不到时返回相近代码列表。
     """
     code = code.strip().upper()
-    recs = _load("detail_all.json")["records"]
+    recs = _detail_records(group or None)
+    if not recs:
+        return {"error": f"group 必须是 {DETAIL_GROUPS} 之一"}
     for r in recs:
         if str(r.get("代码", "")).upper() == code:
             return r
+    if group:  # 指定分类没找到，回退全量再找一次
+        for r in _detail_records():
+            if str(r.get("代码", "")).upper() == code:
+                return r
     near = [r.get("代码") for r in recs if code.split(".")[0] in str(r.get("代码", ""))][:10]
     return {"error": f"未找到 {code}", "相近代码": near}
 
 
 @mcp.tool
-def screen_etfs(field: str, op: str, value: float, limit: int = 20) -> dict:
-    """按数值字段筛选 ETF（从明细汇总表筛）。例：field='规模（亿元）', op='>', value=100。
+def screen_etfs(field: str, op: str, value: float, limit: int = 20, group: str = "") -> dict:
+    """按数值字段筛选 ETF。例：field='规模（亿元）', op='>', value=100。
 
-    op 支持 > >= < <= == !=。返回按该字段降序的前 limit 条。
+    op 支持 > >= < <= == !=。可选 group（行业/宽基/策略/QDII/债券/商品）
+    限定在单个分类内筛选（只下载该分类文件）；不传则全量筛选。
+    返回按该字段降序的前 limit 条。
     """
-    recs = _load("detail_all.json")["records"]
+    recs = _detail_records(group or None)
+    if not recs:
+        return {"error": f"group 必须是 {DETAIL_GROUPS} 之一"}
     ops = {
         ">": lambda a, b: a > b, ">=": lambda a, b: a >= b,
         "<": lambda a, b: a < b, "<=": lambda a, b: a <= b,
