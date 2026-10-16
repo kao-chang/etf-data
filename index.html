@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>ETF 高频数据看板</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--navy:#0a2240;--soft:#51677f;--gold:#c9a227;--up:#b0453a;--down:#3d7a5f;--hair:#d9dce1}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--navy);background:#fff;padding:24px 40px;max-width:1280px;margin:0 auto}
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.brand{font-size:11px;letter-spacing:.35em;color:var(--gold);font-weight:700}
+h1{font-family:SimSun,serif;font-size:28px;margin:6px 0 2px}
+.sub{color:var(--soft);font-size:12px}
+.status{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--soft);flex-wrap:wrap}
+.badge{padding:2px 10px;border:1px solid var(--navy);font-weight:700;color:var(--navy)}
+.badge.trading{background:var(--navy);color:#fff}
+.badge.closed{color:var(--soft);border-color:var(--hair)}
+button{font:inherit;font-size:12px;padding:3px 14px;border:1px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+button:hover{background:var(--navy);color:#fff}
+.rule{border-top:2.5px solid var(--navy);border-bottom:1px solid var(--gold);height:4px;margin:12px 0 18px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);margin-bottom:6px}
+.kpi{padding:4px 16px;border-left:1px solid var(--hair)}
+.kpi:first-child{border-left:none;padding-left:0}
+.kpi .l{font-size:11px;color:var(--soft);letter-spacing:.08em}
+.kpi .v{font-family:SimSun,serif;font-size:24px;font-weight:700;margin:4px 0}
+.kpi .s{font-size:11px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:26px 36px}
+section{margin-top:24px}
+h2{font-size:15px;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--hair)}
+h2 .no{color:var(--gold);margin-right:8px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--soft);font-weight:400;font-size:11px;border-bottom:1px solid var(--hair);padding:4px 6px}
+td{padding:5px 6px;border-bottom:1px dotted #eceff2}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}
+.warn{background:#fdf8ec;border-left:3px solid var(--gold);padding:8px 12px;font-size:12px;color:var(--soft);margin-top:22px}
+.err{background:#fbeeee;border-left:3px solid var(--up);padding:8px 12px;font-size:12px;color:var(--up);margin-top:10px}
+footer{border-top:1px solid var(--hair);margin-top:30px;padding-top:8px;font-size:11px;color:var(--soft)}
+.full{grid-column:1/-1}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}body{padding:16px}}
+</style></head><body>
+<div class="topbar">
+ <div><div class="brand">E T F&nbsp;&nbsp;L I V E&nbsp;&nbsp;B O A R D</div>
+ <h1>ETF 高频数据看板</h1>
+ <div class="sub" id="asof">加载中…</div></div>
+ <div class="status">
+  <span class="badge closed" id="session">—</span>
+  <span id="quote">行情时点 —</span>
+  <span id="cd">下次刷新 —</span>
+  <button onclick="load(true)">立即刷新</button>
+ </div>
+</div>
+<div class="rule"></div>
+<div class="kpis" id="kpis"></div>
+<div class="grid" id="main"></div>
+<footer id="foot"></footer>
+<script>
+let D=null,left=300,errMsg='';
+const PERIOD=(typeof REFRESH!=='undefined'&&REFRESH)||300;
+async function load(manual){
+ try{
+  const r=await fetch('board_data.json?ts='+Date.now());
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  D=await r.json();errMsg='';render();
+ }catch(e){errMsg='数据文件拉取失败（'+(e.message||e)+'），显示的是上次成功数据';render();}
+ left=PERIOD;
+ if(manual)renderStatus();
+}
+const fmt=(v,d=2)=>v==null||v===''?'—':Number(v).toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});
+const sign=v=>v==null?'<span class="down">—</span>':`<span class="${v>=0?'up':'down'}">${v>=0?'+':''}${fmt(v)}</span>`;
+const table=(rows,cols)=>`<table><tr>${cols.map(c=>`<th class="${c[2]?'num':''}">${c[0]}</th>`).join('')}</tr>${(rows||[]).map(r=>`<tr>${cols.map(c=>`<td class="${c[2]?'num':''}">${c[1](r)}</td>`).join('')}</tr>`).join('')}</table>`;
+const etfCols=v=>[['代码',r=>r.code],['名称',r=>r.name],[v||'数值',r=>sign(r.value),1]];
+function renderStatus(){
+ const s=document.getElementById('session');
+ const live=D&&D.live||{};
+ s.textContent=live.sessionLabel||'—';
+ s.className='badge '+(live.session==='trading'?'trading':'closed');
+ document.getElementById('quote').textContent='行情时点 '+(live.quoteAsOf||'—');
+ document.getElementById('cd').textContent=errMsg?'刷新失败':'下次刷新 '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+}
+function render(){
+ renderStatus();
+ const live=D&&D.live||{};
+ document.getElementById('asof').textContent=
+  `更新 ${live.updatedAt||'—'} · 交易日期 ${live.tradeDate||'—'} · 5分钟数据：东方财富`+
+  (D&&D.full?` · 全量数据截至 ${D.asOf||'—'}（池 ${D.universe} 只）`:' · 全量数据暂不可用');
+ const st=live.stats||{};
+ document.getElementById('kpis').innerHTML=[
+  ['上涨家数',st.up!=null?st.up:'—','市场宽度'],
+  ['下跌家数',st.down!=null?st.down:'—',''],
+  ['平盘家数',st.flat!=null?st.flat:'—',''],
+  ['ETF 总成交额',st.amountYi!=null?fmt(st.amountYi)+' 亿':'—','全市场 ETF'],
+  ['分析池规模',D&&D.totalScale?fmt(D.totalScale,0)+' 亿':'—','股票型+QDII 口径'],
+  ['收益序列',D&&D.historyDays?D.historyDays+' 天':'—','本地数据仓累计']
+ ].map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+ let html='';let n=1;
+ if((live.indices||[]).length){
+  html+=`<section class="full"><h2><span class="no">${String(n++).padStart(2,'0')}</span>大盘背景（${live.quoteAsOf||live.tradeDate||''}）</h2>`+
+  table(live.indices,[['指数',r=>r.name],['点位',r=>fmt(r.close),1],['涨跌幅',r=>sign(r.pct),1],['成交额(亿)',r=>fmt(r.amountYi),1]])+'</section>';
+ }
+ html+=['gainers','losers','turnover'].map((k,i)=>{
+  const t=['涨幅 TOP10','跌幅 TOP10','成交额 TOP10'][i];
+  const rows=(live[k]||[]).map(r=>({code:r.code,name:r.name,value:r.pct,amountYi:r.amountYi}));
+  return `<section><h2><span class="no">${String(n++).padStart(2,'0')}</span>${t}</h2>`+
+  table(rows,[['代码',r=>r.code],['名称',r=>r.name],['涨跌幅',r=>sign(r.value),1],['成交额(亿)',r=>fmt(r.amountYi),1]])+'</section>'}).join('');
+ if(D&&D.rolling){for(const w of['5','10','20']){const R=D.rolling[w];
+  if(!R)continue;
+  if((R.retTop||[]).length){html+=`<section><h2><span class="no">${String(n++).padStart(2,'0')}</span>近${w}日累计收益 TOP10</h2>${table(R.retTop,etfCols())}</section>`;}
+  if((R.flowIn||[]).length){html+=`<section><h2><span class="no">${String(n++).padStart(2,'0')}</span>近${w}日净流入 TOP10</h2>${table(R.flowIn,etfCols('净流入(亿)'))}</section>`;}
+ }}
+ document.getElementById('main').innerHTML=html||'<section><h2>暂无数据</h2></section>';
+ let foot='5分钟数据：东方财富公开接口；全量数据：明细汇总表 + 本地数据仓（etf_store.xlsx）；净流入为规模变化扣除收益的标准近似估算。';
+ const warn=[].concat(live.warnings||[],(D&&D.fullErrors)||[]);
+ if(errMsg)foot+='<div class="err">'+errMsg+'</div>';
+ if(warn.length)foot+='<div class="warn">数据质量说明：'+warn.join('；')+'</div>';
+ if((live.errors||[]).length)foot+='<div class="err">'+(live.errors||[]).join('；')+'</div>';
+ document.getElementById('foot').innerHTML=foot+'<br>本页面为数据整理与投教用途，不构成投资建议。';
+}
+setInterval(()=>{if(left>0){left--;renderStatus();}else{load(false);}},1000);
+load(false);
+</script></body></html>
